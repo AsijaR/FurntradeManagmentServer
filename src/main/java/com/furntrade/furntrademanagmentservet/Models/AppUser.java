@@ -15,7 +15,7 @@ public class AppUser {
     private String placeOfWork;
     private String email;
     //ToDO add this properties later
-    //private String password;
+    private String password;
     private AppRole role;
 
     public AppUser() {
@@ -30,6 +30,12 @@ public class AppUser {
         this.username = username;
         this.lastName = lastName;
         this.role=role;
+    }
+
+    public AppUser(String username, String password) {
+        this.username = username;
+        this.password = password;
+        this.role=AppRole.EMPLOYEE;
     }
 
     public Long getId() {
@@ -86,6 +92,14 @@ public class AppUser {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     @Override

@@ -1,10 +1,8 @@
 package com.furntrade.furntrademanagmentservet.Models;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.util.Objects;
+import java.util.Set;
 
 @Entity
 @Table
@@ -16,8 +14,9 @@ public class Product {
     private String model;
     private String color;
     private String material;
-    private float price;
-
+    private double price;
+    @OneToMany(mappedBy = "order",fetch = FetchType.LAZY)
+    private Set<ProductOrderDetails> productOrderDetailsSet;
     public Product() {
     }
 
@@ -69,11 +68,11 @@ public class Product {
         this.material = material;
     }
 
-    public float getPrice() {
+    public double getPrice() {
         return price;
     }
 
-    public void setPrice(float price) {
+    public void setPrice(double price) {
         this.price = price;
     }
 
@@ -82,7 +81,7 @@ public class Product {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Product product = (Product) o;
-        return Float.compare(product.price, price) == 0 && id.equals(product.id) && Objects.equals(name, product.name) && Objects.equals(model, product.model) && Objects.equals(color, product.color) && Objects.equals(material, product.material);
+        return Double.compare(product.price, price) == 0 && id.equals(product.id) && Objects.equals(name, product.name) && Objects.equals(model, product.model) && Objects.equals(color, product.color) && Objects.equals(material, product.material);
     }
 
     @Override

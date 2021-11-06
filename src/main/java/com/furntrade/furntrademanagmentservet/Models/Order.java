@@ -4,19 +4,20 @@ import javax.persistence.*;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 @Entity
-@Table
+@Table(name="orders")
 public class Order {
     private @Id
     @GeneratedValue
     Long id;
     @OneToOne
     private Customer customer;
-    @OneToMany(fetch = FetchType.LAZY)
-    private List<ProductDetails> products;
+    @OneToMany(mappedBy = "product",fetch = FetchType.LAZY)
+    private Set<ProductOrderDetails> productOrderDetails;
     private Date shippmentDate;
-    private float totalOrderPrice;
+    private double totalOrderPrice;
     private OrderStatus status;
     private String note1;
     private String note2;
@@ -24,14 +25,13 @@ public class Order {
     public Order() {
     }
 
-    public Order(Customer customer, List<ProductDetails> products, Date shippmentDate, float totalOrderPrice, String note1, String note2) {
+    public Order(Customer customer, Date shippmentDate, String note1, String note2) {
         this.customer = customer;
-        this.products = products;
         this.shippmentDate = shippmentDate;
-        this.totalOrderPrice = totalOrderPrice;
         this.note1 = note1;
         this.note2 = note2;
         this.status=OrderStatus.WAITING;
+        this.totalOrderPrice=productOrderDetails.stream().mapToDouble(o->o.getTotalPriceForProducts()).sum();
     }
 
     public Long getId() {
@@ -50,12 +50,12 @@ public class Order {
         this.customer = customer;
     }
 
-    public List<ProductDetails> getProducts() {
-        return products;
+    public Set<ProductOrderDetails> getproductOrderDetails() {
+        return productOrderDetails;
     }
 
-    public void setProducts(List<ProductDetails> products) {
-        this.products = products;
+    public void setproductOrderDetails(Set<ProductOrderDetails> productOrderDetails) {
+        this.productOrderDetails = productOrderDetails;
     }
 
     public Date getShippmentDate() {
@@ -66,11 +66,11 @@ public class Order {
         this.shippmentDate = shippmentDate;
     }
 
-    public float getTotalOrderPrice() {
+    public double getTotalOrderPrice() {
         return totalOrderPrice;
     }
 
-    public void setTotalOrderPrice(float totalOrderPrice) {
+    public void setTotalOrderPrice(double totalOrderPrice) {
         this.totalOrderPrice = totalOrderPrice;
     }
 
@@ -103,12 +103,12 @@ public class Order {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Order order = (Order) o;
-        return Float.compare(order.totalOrderPrice, totalOrderPrice) == 0 && id.equals(order.id) && Objects.equals(customer, order.customer) && Objects.equals(products, order.products) && Objects.equals(shippmentDate, order.shippmentDate) && status == order.status && Objects.equals(note1, order.note1) && Objects.equals(note2, order.note2);
+        return Double.compare(order.totalOrderPrice, totalOrderPrice) == 0 && id.equals(order.id) && Objects.equals(customer, order.customer) && Objects.equals(productOrderDetails, order.productOrderDetails) && Objects.equals(shippmentDate, order.shippmentDate) && status == order.status && Objects.equals(note1, order.note1) && Objects.equals(note2, order.note2);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, customer, products, shippmentDate, totalOrderPrice, status, note1, note2);
+        return Objects.hash(id, customer, productOrderDetails, shippmentDate, totalOrderPrice, status, note1, note2);
     }
 
     @Override
@@ -116,7 +116,7 @@ public class Order {
         return "Order{" +
                 "id=" + id +
                 ", customer=" + customer +
-                ", products=" + products +
+                ", products=" + productOrderDetails +
                 ", shippmentDate=" + shippmentDate +
                 ", totalOrderPrice=" + totalOrderPrice +
                 ", status=" + status +
