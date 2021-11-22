@@ -19,6 +19,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/customers")
+@CrossOrigin(origins = "http://localhost:3000")
 public class CustomerController {
 
     private final CustomerRepository repository;
@@ -37,6 +38,7 @@ public class CustomerController {
                 .collect(Collectors.toList());
         return CollectionModel.of(customers, linkTo(methodOn(CustomerController.class).All()).withSelfRel());
     }
+
     @PostMapping("/add")
     ResponseEntity<?> newCustomer(@RequestBody Customer newCustomer) {
 
@@ -64,6 +66,8 @@ public class CustomerController {
                     customer.setCity(newCustomer.getCity());
                     customer.setState(newCustomer.getState());
                     customer.setZip(newCustomer.getZip());
+                    customer.setContactPersonName(newCustomer.getContactPersonName());
+                    customer.setContactPersonEmail(newCustomer.getContactPersonEmail());
                     return repository.save(customer);
                 })
                 .orElseGet(()->

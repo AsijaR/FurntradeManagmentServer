@@ -1,6 +1,8 @@
 package com.furntrade.furntrademanagmentservet.Models;
 
 import javax.persistence.*;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -15,8 +17,10 @@ public class Product {
     private String color;
     private String material;
     private double price;
+    @Transient
+    private int productQuantity;
     @OneToMany(mappedBy = "order",fetch = FetchType.LAZY)
-    private Set<ProductOrderDetails> productOrderDetailsSet;
+    private List<ProductOrderDetails> productOrderDetailsSet;
     public Product() {
     }
 
@@ -62,6 +66,14 @@ public class Product {
 
     public String getMaterial() {
         return material;
+    }
+
+    public List<ProductOrderDetails> getProductOrderDetailsSet() {
+        return productOrderDetailsSet;
+    }
+
+    public void setProductOrderDetailsSet(List<ProductOrderDetails> productOrderDetailsSet) {
+        this.productOrderDetailsSet = productOrderDetailsSet;
     }
 
     public void setMaterial(String material) {

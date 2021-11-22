@@ -18,6 +18,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/employees")
+@CrossOrigin(origins = "http://localhost:3000")
 public class EmployeeController {
     
     private final AppUserRepository repository;

@@ -20,6 +20,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/products")
+@CrossOrigin(origins = "http://localhost:3000")
 public class ProductController {
 
     private final ProductRepository repository;
@@ -30,12 +31,20 @@ public class ProductController {
         this.assembler = assembler;
     }
     @GetMapping()
-    public CollectionModel<EntityModel<Product>> All()
+    public CollectionModel<EntityModel<Product>> AllWithJavaconfig()
     {
         List<EntityModel<Product>> products = repository.findAll().stream().
                 map(assembler::toModel)//
                 .collect(Collectors.toList());
         return CollectionModel.of(products, linkTo(methodOn(CustomerController.class).All()).withSelfRel());
+    }
+    @GetMapping("search/")
+    public CollectionModel<EntityModel<Product>> SeachProducts(@RequestParam(value = "productName") String productName)
+    {
+        List<EntityModel<Product>> products = repository.findByNameIgnoreCase(productName).stream().
+                map(assembler::toModel)//
+                .collect(Collectors.toList());
+        return CollectionModel.of(products);
     }
     @PostMapping("/add")
     ResponseEntity<?> newProduct(@RequestBody Product newProduct) {

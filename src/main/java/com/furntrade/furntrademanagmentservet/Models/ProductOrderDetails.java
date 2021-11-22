@@ -6,13 +6,18 @@ import java.io.Serializable;
 @Entity
 @IdClass(ProductOrderDetails.class)
 public class ProductOrderDetails implements Serializable {
-    @Id @ManyToOne Order order;
 
-    @Id @ManyToOne Product product;
+    @Id
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name="order_id")
+    Order order;
+
+    @Id
+    @ManyToOne(cascade = {CascadeType.PERSIST,CascadeType.MERGE,CascadeType.DETACH})
+    @JoinColumn(name="product_id")
+    Product product;
 
     private int quantity;
-
-    private double totalPrice;
 
     public ProductOrderDetails() {
     }
@@ -20,7 +25,6 @@ public class ProductOrderDetails implements Serializable {
     public ProductOrderDetails(int quantity, Product product) {
         this.quantity = quantity;
         this.product = product;
-        this.totalPrice = quantity*product.getPrice();
     }
 
     public Order getOrder() {
@@ -29,14 +33,6 @@ public class ProductOrderDetails implements Serializable {
 
     public void setOrder(Order order) {
         this.order = order;
-    }
-
-    public double getTotalPriceForProducts() {
-        return totalPrice;
-    }
-
-    public void setTotalPriceForProducts(double totalPriceForProducts) {
-        this.totalPrice = totalPriceForProducts;
     }
 
     public int getQuantity() {
@@ -55,13 +51,17 @@ public class ProductOrderDetails implements Serializable {
         this.product = product;
     }
 
+    public double getPriceOfProduct() {
+        return product.getPrice()*quantity;
+    }
+
     @Override
     public String toString() {
         return "ProductDetails{" +
                 "order=" + order +
                 ", product=" + product +
                 ", quantity=" + quantity +
-                ", totalPriceForProducts=" + totalPrice +
+                ", totalPriceForProducts=" + getPriceOfProduct() +
                 '}';
     }
 }

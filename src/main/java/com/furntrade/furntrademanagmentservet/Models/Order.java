@@ -1,6 +1,9 @@
 package com.furntrade.furntrademanagmentservet.Models;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.persistence.*;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -12,11 +15,13 @@ public class Order {
     private @Id
     @GeneratedValue
     Long id;
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     private Customer customer;
-    @OneToMany(mappedBy = "product",fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "product",fetch = FetchType.LAZY,cascade = {CascadeType.PERSIST,CascadeType.MERGE,CascadeType.DETACH},orphanRemoval = true)
     private Set<ProductOrderDetails> productOrderDetails;
+    @DateTimeFormat
     private Date shippmentDate;
+   // DateTimeFormatter europeanDateFormatter = DateTimeFormatter.ISO_WEEK_DATE.ofPattern("dd.MM.yyyy");
     private double totalOrderPrice;
     private OrderStatus status;
     private String note1;
@@ -31,7 +36,7 @@ public class Order {
         this.note1 = note1;
         this.note2 = note2;
         this.status=OrderStatus.WAITING;
-        this.totalOrderPrice=productOrderDetails.stream().mapToDouble(o->o.getTotalPriceForProducts()).sum();
+        this.totalOrderPrice=productOrderDetails.stream().mapToDouble(o->o.getPriceOfProduct()).sum();
     }
 
     public Long getId() {
@@ -50,11 +55,11 @@ public class Order {
         this.customer = customer;
     }
 
-    public Set<ProductOrderDetails> getproductOrderDetails() {
+    public Set<ProductOrderDetails> getProductOrderDetails() {
         return productOrderDetails;
     }
 
-    public void setproductOrderDetails(Set<ProductOrderDetails> productOrderDetails) {
+    public void setProductOrderDetails(Set<ProductOrderDetails> productOrderDetails) {
         this.productOrderDetails = productOrderDetails;
     }
 
