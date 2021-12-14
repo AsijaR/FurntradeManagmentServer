@@ -1,27 +1,20 @@
 package com.furntrade.furntrademanagmentservet.Models;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.springframework.format.annotation.DateTimeFormat;
-
 import javax.persistence.*;
-import java.time.format.DateTimeFormatter;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 @Entity
 @Table(name="orders")
-public class Order {
+public class Order{
     private @Id
     @GeneratedValue
     Long id;
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = {CascadeType.MERGE,CascadeType.DETACH})
     private Customer customer;
-    @OneToMany(mappedBy = "product",fetch = FetchType.LAZY,cascade = {CascadeType.PERSIST,CascadeType.MERGE,CascadeType.DETACH},orphanRemoval = true)
-    private Set<ProductOrderDetails> productOrderDetails;
+    @OneToMany(mappedBy = "order",fetch = FetchType.EAGER,cascade = CascadeType.ALL,orphanRemoval = true)
+    private List<ProductOrderDetails> orderedProducts = new ArrayList<>();
     @DateTimeFormat
     private Date shippmentDate;
-   // DateTimeFormatter europeanDateFormatter = DateTimeFormatter.ISO_WEEK_DATE.ofPattern("dd.MM.yyyy");
     private double totalOrderPrice;
     private OrderStatus status;
     private String note1;
@@ -36,7 +29,6 @@ public class Order {
         this.note1 = note1;
         this.note2 = note2;
         this.status=OrderStatus.WAITING;
-        this.totalOrderPrice=productOrderDetails.stream().mapToDouble(o->o.getPriceOfProduct()).sum();
     }
 
     public Long getId() {
@@ -55,12 +47,28 @@ public class Order {
         this.customer = customer;
     }
 
-    public Set<ProductOrderDetails> getProductOrderDetails() {
-        return productOrderDetails;
+    public List<ProductOrderDetails> getOrderedProducts() {
+        return orderedProducts;
     }
 
-    public void setProductOrderDetails(Set<ProductOrderDetails> productOrderDetails) {
-        this.productOrderDetails = productOrderDetails;
+    public void setOrderedProducts(List<ProductOrderDetails> orderedProducts) {
+        this.orderedProducts = orderedProducts;
+    }
+
+    public void addProduct(Product product, int quantity) {
+        ProductOrderDetails orderedProduct = new ProductOrderDetails(this,product,quantity);
+        orderedProducts.add(orderedProduct);
+        product.getProductOrderDetails().add(orderedProduct);
+        totalOrderPrice+=product.getPrice()*quantity;
+
+    }
+
+    public void removeProduct(Product product, int quantity) {
+        ProductOrderDetails orderedProduct = new ProductOrderDetails( this, product,quantity);
+        product.getProductOrderDetails().remove(orderedProduct);
+        orderedProducts.remove(orderedProduct);
+        orderedProduct.setOrder(null);
+        orderedProduct.setProduct(null);
     }
 
     public Date getShippmentDate() {
@@ -108,12 +116,12 @@ public class Order {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Order order = (Order) o;
-        return Double.compare(order.totalOrderPrice, totalOrderPrice) == 0 && id.equals(order.id) && Objects.equals(customer, order.customer) && Objects.equals(productOrderDetails, order.productOrderDetails) && Objects.equals(shippmentDate, order.shippmentDate) && status == order.status && Objects.equals(note1, order.note1) && Objects.equals(note2, order.note2);
+        return Double.compare(order.totalOrderPrice, totalOrderPrice) == 0 && id.equals(order.id) && customer.equals(order.customer) && Objects.equals(shippmentDate, order.shippmentDate) && status == order.status && Objects.equals(note1, order.note1) && Objects.equals(note2, order.note2);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, customer, productOrderDetails, shippmentDate, totalOrderPrice, status, note1, note2);
+        return Objects.hash(id, customer, shippmentDate, totalOrderPrice, status, note1, note2);
     }
 
     @Override
@@ -121,7 +129,7 @@ public class Order {
         return "Order{" +
                 "id=" + id +
                 ", customer=" + customer +
-                ", products=" + productOrderDetails +
+                ", products=" + orderedProducts +
                 ", shippmentDate=" + shippmentDate +
                 ", totalOrderPrice=" + totalOrderPrice +
                 ", status=" + status +

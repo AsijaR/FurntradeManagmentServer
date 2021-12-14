@@ -1,19 +1,21 @@
 package com.furntrade.furntrademanagmentservet.Models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.Objects;
 
 @Entity
-@IdClass(ProductOrderDetails.class)
 public class ProductOrderDetails implements Serializable {
 
     @Id
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name="order_id")
+    @JsonIgnore
     Order order;
 
     @Id
-    @ManyToOne(cascade = {CascadeType.PERSIST,CascadeType.MERGE,CascadeType.DETACH})
+    @ManyToOne
     @JoinColumn(name="product_id")
     Product product;
 
@@ -22,17 +24,10 @@ public class ProductOrderDetails implements Serializable {
     public ProductOrderDetails() {
     }
 
-    public ProductOrderDetails(int quantity, Product product) {
-        this.quantity = quantity;
-        this.product = product;
-    }
-
-    public Order getOrder() {
-        return order;
-    }
-
-    public void setOrder(Order order) {
+    public ProductOrderDetails(Order order, Product product, int quantity) {
         this.order = order;
+        this.product = product;
+        this.quantity = quantity;
     }
 
     public int getQuantity() {
@@ -43,6 +38,14 @@ public class ProductOrderDetails implements Serializable {
         this.quantity = quantity;
     }
 
+    public Order getOrder() {
+        return order;
+    }
+
+    public void setOrder(Order order) {
+        this.order = order;
+    }
+
     public Product getProduct() {
         return product;
     }
@@ -51,17 +54,16 @@ public class ProductOrderDetails implements Serializable {
         this.product = product;
     }
 
-    public double getPriceOfProduct() {
-        return product.getPrice()*quantity;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ProductOrderDetails that = (ProductOrderDetails) o;
+        return Objects.equals(order,that.order) && Objects.equals(product,that.product);
     }
 
     @Override
-    public String toString() {
-        return "ProductDetails{" +
-                "order=" + order +
-                ", product=" + product +
-                ", quantity=" + quantity +
-                ", totalPriceForProducts=" + getPriceOfProduct() +
-                '}';
+    public int hashCode() {
+        return Objects.hash(order, product);
     }
 }

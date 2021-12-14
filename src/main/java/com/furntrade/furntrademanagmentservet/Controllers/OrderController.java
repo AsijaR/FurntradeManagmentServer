@@ -69,16 +69,16 @@ public class OrderController {
     @GetMapping("/{id}")
     public Order One(@PathVariable Long id)
     {
-        Order order=repository.findById(id).orElseThrow(()->new ObjectNotFoundException(id));
-        Order pod=  repository.getById(id);
-       // ModelMapper modelMapper = new ModelMapper();
+        Order order=repository.getOrderById(id);
+        //Order pod=  repository.getById(id);
+        // ModelMapper modelMapper = new ModelMapper();
         //OrderDetailsDto ordersDetailsDto = modelMapper.map(order, OrderDetailsDto.class);
-        return pod;
+        return order;
     }
     @PatchMapping("/change-status/{id}")
     ResponseEntity<?> updateOrderStatus(@RequestBody OrderStatus status, @PathVariable Long id)
     {
-       Order order=repository.findById(id).orElseThrow(()->new ObjectNotFoundException(id));
+        Order order=repository.findById(id).orElseThrow(()->new ObjectNotFoundException(id));
         try {
 
             var isOrderStatusValid =EnumUtils.isValidEnum(OrderStatus.class, status.getDepCode());
@@ -111,10 +111,10 @@ public class OrderController {
     @DeleteMapping("/{id}")
     ResponseEntity<?> deleteOrder(@PathVariable Long id)
     {
-        var o =repository.findOrderById(id);
-      //  var c=repository.findByOrderId(id);
-      //  o.getProductOrderDetails().remove(this);
-      //  o.reo
+
+        //  var c=repository.findByOrderId(id);
+        //  o.getProductOrderDetails().remove(this);
+        //  o.reo
         repository.deleteById(id);
         return ResponseEntity.noContent().build();
     }
@@ -130,7 +130,7 @@ public class OrderController {
         if (ordersDto.getId() != null) {
             Order oldOrder = repository.getById(ordersDto.getId());
             //post.setre(oldOrder.getRedditID());
-           // post.setSent(oldOrder.isSent());
+            // post.setSent(oldOrder.isSent());
         }
         return order;
     }

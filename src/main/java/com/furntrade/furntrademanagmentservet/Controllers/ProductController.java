@@ -2,7 +2,6 @@ package com.furntrade.furntrademanagmentservet.Controllers;
 
 import com.furntrade.furntrademanagmentservet.Exceptions.NotFoundExceptions.ObjectNotFoundException;
 import com.furntrade.furntrademanagmentservet.ModelAssemblers.ProductModelAssembler;
-import com.furntrade.furntrademanagmentservet.Models.Customer;
 import com.furntrade.furntrademanagmentservet.Models.Product;
 import com.furntrade.furntrademanagmentservet.Repositories.ProductRepository;
 import org.springframework.hateoas.CollectionModel;
