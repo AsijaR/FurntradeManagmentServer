@@ -7,14 +7,14 @@ import java.util.*;
 @Table
 public class Product {
     private @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
     private String name;
     private String model;
     private String color;
     private String material;
     private double price;
-    @OneToMany(mappedBy = "order",cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "order",cascade = {CascadeType.MERGE,CascadeType.DETACH}, orphanRemoval = true)
     private List<ProductOrderDetails> productOrderDetails = new ArrayList<>();
     public Product() {
     }

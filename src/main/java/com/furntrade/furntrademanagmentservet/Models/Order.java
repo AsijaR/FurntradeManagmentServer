@@ -7,7 +7,7 @@ import java.util.*;
 @Table(name="orders")
 public class Order{
     private @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
     @OneToOne(cascade = {CascadeType.MERGE,CascadeType.DETACH})
     private Customer customer;

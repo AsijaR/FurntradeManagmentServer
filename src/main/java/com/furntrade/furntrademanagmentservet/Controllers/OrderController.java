@@ -11,6 +11,7 @@ import com.furntrade.furntrademanagmentservet.Models.Product;
 import com.furntrade.furntrademanagmentservet.Models.ProductOrderDetails;
 import com.furntrade.furntrademanagmentservet.Repositories.OrderRepository;
 import org.apache.commons.lang3.StringUtils;
+import org.aspectj.weaver.ast.Or;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
@@ -50,21 +51,18 @@ public class OrderController {
                 .collect(Collectors.toList());
         return CollectionModel.of(orders);
     }
-    @GetMapping("/p")
-    public Collection<OrdersDto> frf()
+    @GetMapping("/search")
+    public Order SearchById(@RequestParam Long id)
     {
-        var o = repository.findAll().stream().map(this::convertToDto).collect(Collectors.toList());
+        var o = repository.getOrderById(id);
         return o;
     }
-    @PostMapping("/add")
-    ResponseEntity<?> newOrder(@RequestBody OrdersDto newOrder) throws ParseException {
-
-        Order o =convertToEntity(newOrder);
-        OrdersDto entityModel = assembler.toModel(repository.save(o));
-
-        return ResponseEntity //
-                .created(entityModel.getRequiredLink(IanaLinkRelations.SELF).toUri()) //
-                .body(entityModel);
+    @GetMapping("/filter-order-status")
+    public List<Order> FilterOrderByStatus(@RequestParam String status)
+    {
+        OrderStatus orderStatus = OrderStatus.valueOf(status.toUpperCase());
+        var o = repository.findAllByStatus(orderStatus);
+        return o;
     }
     @GetMapping("/{id}")
     public Order One(@PathVariable Long id)
@@ -76,16 +74,43 @@ public class OrderController {
         return order;
     }
     @PatchMapping("/change-status/{id}")
-    ResponseEntity<?> updateOrderStatus(@RequestBody OrderStatus status, @PathVariable Long id)
+    ResponseEntity<?> updateOrderStatus(@RequestParam String status, @PathVariable Long id)
     {
         Order order=repository.findById(id).orElseThrow(()->new ObjectNotFoundException(id));
         try {
 
-            var isOrderStatusValid =EnumUtils.isValidEnum(OrderStatus.class, status.getDepCode());
-            order.setStatus(status);
+            OrderStatus orderStatus = OrderStatus.valueOf(status.toUpperCase());
+            order.setStatus(orderStatus);
             return ResponseEntity.ok(assembler.toModel(repository.save(order)));
 
         } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body("Not valid value of status");
+        }
+    }
+    @PostMapping("/add")
+    ResponseEntity<?> newOrder(@RequestBody Order newOrder) throws ParseException {
+
+       // Order o =convertToEntity(newOrder);
+//        newOrder.
+//        OrdersDto entityModel = assembler.toModel(repository.save(newOrder));
+//
+//        return ResponseEntity //
+//                .created(entityModel.getRequiredLink(IanaLinkRelations.SELF).toUri()) //
+//                .body(entityModel);
+        return  ResponseEntity.ok("");
+    }
+
+    @PostMapping("/list/{id}")
+    ResponseEntity<?> listProd(@RequestBody List<Product> products,@PathVariable Long id) throws ParseException {
+        Order order=repository.findById(id).orElseThrow(()->new ObjectNotFoundException(id));
+        try {
+
+            for(Product product:products) {
+                order.addProduct(product,4);
+            }
+            repository.save(order);
+            return ResponseEntity.ok(assembler.toModel(order));}
+        catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body("Not valid value of status");
         }
     }
