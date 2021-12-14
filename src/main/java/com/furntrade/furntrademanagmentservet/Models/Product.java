@@ -14,8 +14,8 @@ public class Product {
     private String color;
     private String material;
     private double price;
-    @OneToMany(mappedBy = "order",fetch = FetchType.LAZY, orphanRemoval = true)
-    private List<ProductOrderDetails> orders = new ArrayList<>();
+    @OneToMany(mappedBy = "order",cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductOrderDetails> productOrderDetails = new ArrayList<>();
     public Product() {
     }
 
@@ -63,12 +63,12 @@ public class Product {
         return material;
     }
 
-    public List<ProductOrderDetails> getOrders() {
-        return orders;
+    public List<ProductOrderDetails> getProductOrderDetails() {
+        return productOrderDetails;
     }
 
-    public void setOrders(List<ProductOrderDetails> orders) {
-        this.orders = orders;
+    public void setProductOrderDetails(List<ProductOrderDetails> orders) {
+        this.productOrderDetails = orders;
     }
 
     public void setMaterial(String material) {

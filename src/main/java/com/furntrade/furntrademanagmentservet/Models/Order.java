@@ -1,20 +1,17 @@
 package com.furntrade.furntrademanagmentservet.Models;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.springframework.format.annotation.DateTimeFormat;
-
 import javax.persistence.*;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Entity
 @Table(name="orders")
-public class Order {
+public class Order{
     private @Id
     @GeneratedValue
     Long id;
     @OneToOne(cascade = {CascadeType.MERGE,CascadeType.DETACH})
     private Customer customer;
-    @OneToMany(mappedBy = "order",fetch = FetchType.EAGER,cascade = {CascadeType.MERGE,CascadeType.DETACH, CascadeType.REMOVE,CascadeType.REFRESH},orphanRemoval = true)
+    @OneToMany(mappedBy = "order",fetch = FetchType.EAGER,cascade = CascadeType.ALL,orphanRemoval = true)
     private List<ProductOrderDetails> orderedProducts = new ArrayList<>();
     @DateTimeFormat
     private Date shippmentDate;
@@ -59,15 +56,16 @@ public class Order {
     }
 
     public void addProduct(Product product, int quantity) {
-        ProductOrderDetails orderedProduct = new ProductOrderDetails(this, product,quantity);
+        ProductOrderDetails orderedProduct = new ProductOrderDetails(this,product,quantity);
         orderedProducts.add(orderedProduct);
-        product.getOrders().add(orderedProduct);
+        product.getProductOrderDetails().add(orderedProduct);
         totalOrderPrice+=product.getPrice()*quantity;
+
     }
 
-    public void removeProduct(Product product) {
-        ProductOrderDetails orderedProduct = new ProductOrderDetails( this, product );
-        product.getOrders().remove(orderedProduct);
+    public void removeProduct(Product product, int quantity) {
+        ProductOrderDetails orderedProduct = new ProductOrderDetails( this, product,quantity);
+        product.getProductOrderDetails().remove(orderedProduct);
         orderedProducts.remove(orderedProduct);
         orderedProduct.setOrder(null);
         orderedProduct.setProduct(null);
@@ -118,12 +116,12 @@ public class Order {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Order order = (Order) o;
-        return Double.compare(order.totalOrderPrice, totalOrderPrice) == 0 && id.equals(order.id) && Objects.equals(customer, order.customer) && Objects.equals(orderedProducts, order.orderedProducts) && Objects.equals(shippmentDate, order.shippmentDate) && status == order.status && Objects.equals(note1, order.note1) && Objects.equals(note2, order.note2);
+        return Double.compare(order.totalOrderPrice, totalOrderPrice) == 0 && id.equals(order.id) && customer.equals(order.customer) && Objects.equals(shippmentDate, order.shippmentDate) && status == order.status && Objects.equals(note1, order.note1) && Objects.equals(note2, order.note2);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, customer, orderedProducts, shippmentDate, totalOrderPrice, status, note1, note2);
+        return Objects.hash(id, customer, shippmentDate, totalOrderPrice, status, note1, note2);
     }
 
     @Override

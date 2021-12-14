@@ -1,27 +1,28 @@
 package com.furntrade.furntrademanagmentservet.Models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Objects;
 
 @Entity
-@IdClass(ProductOrderDetails.class)
 public class ProductOrderDetails implements Serializable {
 
     @Id
-    @ManyToOne()
+    @ManyToOne
     @JoinColumn(name="order_id")
     @JsonIgnore
     Order order;
 
     @Id
-    @ManyToOne()
+    @ManyToOne
     @JoinColumn(name="product_id")
     Product product;
 
     private int quantity;
+
+    public ProductOrderDetails() {
+    }
 
     public ProductOrderDetails(Order order, Product product, int quantity) {
         this.order = order;
@@ -35,14 +36,6 @@ public class ProductOrderDetails implements Serializable {
 
     public void setQuantity(int quantity) {
         this.quantity = quantity;
-    }
-
-    public ProductOrderDetails() {
-    }
-
-    public ProductOrderDetails(Order order, Product product) {
-        this.order = order;
-        this.product = product;
     }
 
     public Order getOrder() {
@@ -66,11 +59,11 @@ public class ProductOrderDetails implements Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ProductOrderDetails that = (ProductOrderDetails) o;
-        return quantity == that.quantity && order.equals(that.order) && product.equals(that.product);
+        return Objects.equals(order,that.order) && Objects.equals(product,that.product);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(order, product, quantity);
+        return Objects.hash(order, product);
     }
 }
