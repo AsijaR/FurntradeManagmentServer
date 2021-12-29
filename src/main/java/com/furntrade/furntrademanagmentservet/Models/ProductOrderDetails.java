@@ -6,17 +6,21 @@ import java.io.Serializable;
 import java.util.Objects;
 
 @Entity
-public class ProductOrderDetails implements Serializable {
+@Table
+public class ProductOrderDetails implements Serializable{
 
-    @Id
+    @EmbeddedId
+    @JsonIgnore
+    private ProdOrderId id;
+
+
     @ManyToOne
-    @JoinColumn(name="order_id")
+    @MapsId("orderId")
     @JsonIgnore
     Order order;
 
-    @Id
     @ManyToOne
-    @JoinColumn(name="product_id")
+    @MapsId("productId")
     Product product;
 
     private int quantity;
@@ -25,17 +29,18 @@ public class ProductOrderDetails implements Serializable {
     }
 
     public ProductOrderDetails(Order order, Product product, int quantity) {
+        this.id = new ProdOrderId(order.getId(), product.getId());
         this.order = order;
         this.product = product;
         this.quantity = quantity;
     }
 
-    public int getQuantity() {
-        return quantity;
+    public ProdOrderId getId() {
+        return id;
     }
 
-    public void setQuantity(int quantity) {
-        this.quantity = quantity;
+    public void setId(ProdOrderId id) {
+        this.id = id;
     }
 
     public Order getOrder() {
@@ -52,6 +57,14 @@ public class ProductOrderDetails implements Serializable {
 
     public void setProduct(Product product) {
         this.product = product;
+    }
+
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
     }
 
     @Override

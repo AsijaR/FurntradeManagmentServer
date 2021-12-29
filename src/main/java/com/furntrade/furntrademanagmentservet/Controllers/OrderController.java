@@ -1,32 +1,19 @@
 package com.furntrade.furntrademanagmentservet.Controllers;
 
-import com.furntrade.furntrademanagmentservet.Dtos.OrderDetailsDto;
-import com.furntrade.furntrademanagmentservet.Dtos.OrderResponse;
-import com.furntrade.furntrademanagmentservet.Dtos.OrdersDto;
+import com.furntrade.furntrademanagmentservet.Dtos.*;
 import com.furntrade.furntrademanagmentservet.Exceptions.NotFoundExceptions.ObjectNotFoundException;
 import com.furntrade.furntrademanagmentservet.ModelAssemblers.OrderModelAssembler;
-import com.furntrade.furntrademanagmentservet.Models.Order;
-import com.furntrade.furntrademanagmentservet.Models.OrderStatus;
-import com.furntrade.furntrademanagmentservet.Models.Product;
-import com.furntrade.furntrademanagmentservet.Models.ProductOrderDetails;
-import com.furntrade.furntrademanagmentservet.Repositories.OrderRepository;
-import org.apache.commons.lang3.StringUtils;
-import org.aspectj.weaver.ast.Or;
+import com.furntrade.furntrademanagmentservet.Models.*;
+import com.furntrade.furntrademanagmentservet.Repositories.*;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.apache.commons.lang3.EnumUtils;
-
 import java.text.ParseException;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static java.lang.System.out;
-
-//import static com.furntrade.furntrademanagmentservet.Models.OrderStatus.getOrderStatus;
 
 @RestController
 @RequestMapping("/orders")
@@ -38,10 +25,14 @@ public class OrderController {
     @Autowired
     private ModelMapper modelMapper;
 
+    @Autowired
+    private CustomerRepository customerRepository;
+    @Autowired
+    private ProductRepository productRepository;
+
     public OrderController(OrderRepository repository, OrderModelAssembler assembler) {
         this.repository = repository;
         this.assembler = assembler;
-        //modelMapper.typeMap(OrderDetailsDto.class, OrderDetailsDto.class).addMapping(Pro::getQuantity, OrderDetailsDto::set);
     }
     @GetMapping()
     public CollectionModel<OrdersDto> All()
@@ -88,19 +79,69 @@ public class OrderController {
         }
     }
     @PostMapping("/add")
-    ResponseEntity<?> newOrder(@RequestBody Order newOrder) throws ParseException {
+    ResponseEntity<?> newOrder(@RequestBody OrderRequestDto orderRequestDto) throws ParseException {
+        Order newOrder=convertToOrderEntity(orderRequestDto.getOrder());
+        Customer customer=customerRepository.findByName(orderRequestDto.getOrder().getCustomerName());
+        newOrder.setCustomer(customer);
+        newOrder.setStatus(OrderStatus.WAITING);
+        repository.save(newOrder);
+        for (ProductOrderDetailsDto prod: orderRequestDto.getProducts()) {
+            newOrder.addProduct(prod.getProduct(),prod.getQuantity());
+        }
+        try{
+            repository.save(newOrder);
+            return ResponseEntity.ok(convertToDto(newOrder));
+        }
+        catch (Exception ex)
+        {
+            return ResponseEntity.ok("You cant add two same products to the order");
+        }
+    }
+    @PatchMapping("{id}/remove-product/{productId}")
+    ResponseEntity<?> removeProductFromOrder(@PathVariable Long id,@PathVariable Long productId,@RequestParam int quantity) throws ParseException
+    {
+        Order findOrder=repository.findOrderById(id);
+        Product product=productRepository.getById(productId);
+        var productExistInOrder=findOrder.getOrderedProducts().stream().anyMatch(p->p.getProduct()==product);
+        if(productExistInOrder && findOrder.getOrderedProducts().size()>1)
+        {
+            findOrder.removeProduct(product,quantity);
+            repository.save(findOrder);
+            return ResponseEntity.ok("Product is removed from the order");
+        }
+       else
+       {
+           return (ResponseEntity<?>) ResponseEntity.badRequest();
+       }
+    }
+    @PatchMapping("{id}/add-product/{productId}")
+    ResponseEntity<?> addProductToOrder(@PathVariable Long id,@PathVariable Long productId,@RequestParam int quantity) throws ParseException
+    {
+        Order order=repository.findById(id).orElseThrow(()->new ObjectNotFoundException(id));
+        Product product=productRepository.findById(productId).orElseThrow(()->new ObjectNotFoundException(id));
 
-       // Order o =convertToEntity(newOrder);
-//        newOrder.
-//        OrdersDto entityModel = assembler.toModel(repository.save(newOrder));
-//
-//        return ResponseEntity //
-//                .created(entityModel.getRequiredLink(IanaLinkRelations.SELF).toUri()) //
-//                .body(entityModel);
-        return  ResponseEntity.ok("");
+        var productExistInOrder=order.getOrderedProducts().stream().anyMatch(p->p.getProduct()==product);
+        if(!productExistInOrder)
+        {
+            order.addProduct(product,quantity);
+            try {
+                repository.save(order);
+                return ResponseEntity.ok("Product is addede to the order");
+            }
+           catch (Exception ex)
+           {
+               return ResponseEntity.ok(ex);
+           }
+        }
+        else
+        {
+            return (ResponseEntity<?>) ResponseEntity.badRequest();
+        }
     }
 
     @PostMapping("/list/{id}")
+//    @Consumes({ MediaType.APPLICATION_JSON })
+//    @Produces({ MediaType.APPLICATION_JSON })
     ResponseEntity<?> listProd(@RequestBody List<Product> products,@PathVariable Long id) throws ParseException {
         Order order=repository.findById(id).orElseThrow(()->new ObjectNotFoundException(id));
         try {
@@ -115,23 +156,20 @@ public class OrderController {
         }
     }
     @PutMapping("/update/{id}")
-    ResponseEntity<?> updateOrder(@RequestBody OrdersDto newOrder, @PathVariable Long id) throws ParseException {
-//        Order updateOrder=repository.findById(id)
-//                .map(Order -> {
-////                    Order.setCustomer(newOrder.);
-////                    Order.setShippmentDate(newOrder.getShippmentDate());
-////                    Order.setNote1(newOrder.getNote1());
-////                    Order.setNote2(newOrder.getNote2());
-////                    return repository.save(Order);
-//                })
-//                .orElseGet(()->
-//                {
-//                    newOrder.setId(id);
-//                    return repository.save(newOrder);
-//                });
-
-        Order o =convertToEntity(newOrder);
-        return  ResponseEntity.ok(assembler.toModel(o));
+    ResponseEntity<?> updateOrder(@PathVariable Long id,@RequestBody OrdersDto newOrder) throws ParseException {
+        Customer customer=customerRepository.findByName(newOrder.getCustomerName());
+        Order updateOrder=repository.findById(id)
+                .map(order -> {
+                    order.setCustomer(customer);
+                    order.setShippmentDate(newOrder.getShippmentDate());
+                    order.setNote1(newOrder.getNote1());
+                    order.setNote2(newOrder.getNote2());
+                    order.setStatus(newOrder.getStatus());
+                    return repository.save(order);
+                }).orElseThrow(()->new ObjectNotFoundException(id));
+        var entityModel= assembler.toModel(updateOrder);
+        return ResponseEntity.created(entityModel.getRequiredLink(IanaLinkRelations.SELF).toUri())
+                .body(entityModel);
     }
     @DeleteMapping("/{id}")
     ResponseEntity<?> deleteOrder(@PathVariable Long id)
@@ -150,12 +188,10 @@ public class OrderController {
         return ordersDto;
     }
 
-    private Order convertToEntity(OrdersDto ordersDto) throws ParseException {
+    private Order convertToOrderEntity(OrdersDto ordersDto) throws ParseException {
         Order order = modelMapper.map(ordersDto, Order.class);
         if (ordersDto.getId() != null) {
             Order oldOrder = repository.getById(ordersDto.getId());
-            //post.setre(oldOrder.getRedditID());
-            // post.setSent(oldOrder.isSent());
         }
         return order;
     }

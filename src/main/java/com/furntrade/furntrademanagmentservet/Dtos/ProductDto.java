@@ -9,6 +9,7 @@ public class ProductDto extends RepresentationModel<ProductDto> {
     private String color;
     private String price;
     private int productOrderDetailsSetQuantity;
+
     public String getName() {
         return name;
     }

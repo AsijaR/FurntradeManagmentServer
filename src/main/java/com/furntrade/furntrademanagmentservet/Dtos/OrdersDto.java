@@ -1,21 +1,27 @@
 package com.furntrade.furntrademanagmentservet.Dtos;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.furntrade.furntrademanagmentservet.Models.Customer;
+import com.furntrade.furntrademanagmentservet.Models.OrderStatus;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.hateoas.RepresentationModel;
+
+import java.util.Date;
 
 public class OrdersDto extends RepresentationModel<OrdersDto> {
 
     private Long id;
 
-    private String shippmentDate;
+    @DateTimeFormat
+    private Date shippmentDate;
 
-    private String status;
+    private OrderStatus status;
 
     private String note1;
 
     private String note2;
 
     private String CustomerName;
+
 
     @JsonIgnore
     private Customer c;
@@ -35,19 +41,19 @@ public class OrdersDto extends RepresentationModel<OrdersDto> {
         this.c = c;
     }
 
-    public String getShippmentDate() {
+    public Date getShippmentDate() {
         return shippmentDate;
     }
 
-    public void setShippmentDate(String shippmentDate) {
+    public void setShippmentDate(Date shippmentDate) {
         this.shippmentDate = shippmentDate;
     }
 
-    public String getStatus() {
+    public OrderStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(OrderStatus status) {
         this.status = status;
     }
 

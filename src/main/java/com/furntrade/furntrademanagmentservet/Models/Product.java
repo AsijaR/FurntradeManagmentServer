@@ -7,15 +7,17 @@ import java.util.*;
 @Table
 public class Product {
     private @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue
     Long id;
     private String name;
     private String model;
     private String color;
     private String material;
     private double price;
-    @OneToMany(mappedBy = "order",cascade = {CascadeType.MERGE,CascadeType.DETACH}, orphanRemoval = true)
+//    ,fetch = FetchType.LAZY
+    @OneToMany(mappedBy = "order", cascade = CascadeType.MERGE,orphanRemoval = true)
     private List<ProductOrderDetails> productOrderDetails = new ArrayList<>();
+
     public Product() {
     }
 
@@ -67,8 +69,8 @@ public class Product {
         return productOrderDetails;
     }
 
-    public void setProductOrderDetails(List<ProductOrderDetails> orders) {
-        this.productOrderDetails = orders;
+    public void setProductOrderDetails(List<ProductOrderDetails> productOrderDetails) {
+        this.productOrderDetails = productOrderDetails;
     }
 
     public void setMaterial(String material) {
