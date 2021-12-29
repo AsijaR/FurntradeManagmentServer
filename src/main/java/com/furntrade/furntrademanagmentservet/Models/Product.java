@@ -14,8 +14,10 @@ public class Product {
     private String color;
     private String material;
     private double price;
-    @OneToMany(mappedBy = "order",cascade = CascadeType.ALL, orphanRemoval = true)
+//    ,fetch = FetchType.LAZY
+    @OneToMany(mappedBy = "order", cascade = CascadeType.MERGE,orphanRemoval = true)
     private List<ProductOrderDetails> productOrderDetails = new ArrayList<>();
+
     public Product() {
     }
 
@@ -67,8 +69,8 @@ public class Product {
         return productOrderDetails;
     }
 
-    public void setProductOrderDetails(List<ProductOrderDetails> orders) {
-        this.productOrderDetails = orders;
+    public void setProductOrderDetails(List<ProductOrderDetails> productOrderDetails) {
+        this.productOrderDetails = productOrderDetails;
     }
 
     public void setMaterial(String material) {

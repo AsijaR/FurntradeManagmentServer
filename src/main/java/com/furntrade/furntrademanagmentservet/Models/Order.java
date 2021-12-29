@@ -11,7 +11,7 @@ public class Order{
     Long id;
     @OneToOne(cascade = {CascadeType.MERGE,CascadeType.DETACH})
     private Customer customer;
-    @OneToMany(mappedBy = "order",fetch = FetchType.EAGER,cascade = CascadeType.ALL,orphanRemoval = true)
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL,orphanRemoval = true)
     private List<ProductOrderDetails> orderedProducts = new ArrayList<>();
     @DateTimeFormat
     private Date shippmentDate;
@@ -63,12 +63,13 @@ public class Order{
 
     }
 
-    public void removeProduct(Product product, int quantity) {
-        ProductOrderDetails orderedProduct = new ProductOrderDetails( this, product,quantity);
+    public void removeProduct(Product product,int quantity) {
+        ProductOrderDetails orderedProduct = new ProductOrderDetails( this, product,0);
         product.getProductOrderDetails().remove(orderedProduct);
         orderedProducts.remove(orderedProduct);
         orderedProduct.setOrder(null);
         orderedProduct.setProduct(null);
+        totalOrderPrice-=product.getPrice()*quantity;
     }
 
     public Date getShippmentDate() {
