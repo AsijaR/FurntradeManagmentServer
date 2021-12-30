@@ -1,11 +1,8 @@
 package com.furntrade.furntrademanagmentservet.Data;
 
-import com.furntrade.furntrademanagmentservet.Models.Customer;
-import com.furntrade.furntrademanagmentservet.Models.Order;
-import com.furntrade.furntrademanagmentservet.Models.Product;
-import com.furntrade.furntrademanagmentservet.Repositories.CustomerRepository;
-import com.furntrade.furntrademanagmentservet.Repositories.OrderRepository;
-import com.furntrade.furntrademanagmentservet.Repositories.ProductRepository;
+import com.furntrade.furntrademanagmentservet.Models.*;
+import com.furntrade.furntrademanagmentservet.Repositories.*;
+import com.furntrade.furntrademanagmentservet.Service.IUserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
@@ -13,6 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 
 @Configuration
@@ -20,9 +18,26 @@ class LoadDatabase {
     private static final Logger log = LoggerFactory.getLogger(LoadDatabase.class);
 
     @Bean
-    CommandLineRunner initDatabase(ProductRepository productRepository, OrderRepository orderRepository, CustomerRepository customerRepository) {
+    CommandLineRunner initDatabase(ProductRepository productRepository, IUserService userService, OrderRepository orderRepository, CustomerRepository customerRepository) {
 
         return args -> {
+//            userService.saveRole(new AppRole(null,"admin"));
+//            userService.saveRole(new AppRole(null,"employee"));
+//            userService.saveUser(new AppUser(null,"asa","asija","asija","","fefe","1234",new ArrayList<>()));
+//            userService.saveUser(new AppUser(null,"neko","asija","asija","","neko","1234",new ArrayList<>()));
+//            userService.saveUser(new AppUser(null,"jasko","Jasmin","Husovic","Pazar","","1234",new ArrayList<>()));
+//            userService.addRoleToUser("asa","admin");
+//            userService.addRoleToUser("asa","employee");
+//            userService.addRoleToUser("jasko","employee");
+//            AppUser user=new AppUser();
+//            user.setUsername("asa");
+//            user.setPassword("1234");
+//            AppRole roles=new AppRole();
+//            roles.setName("APP_ADMIN");
+//
+//            log.info("Ubacujem Customer 1 " + appUserRepository.save(user));
+//            log.info("Ubacujem Customer 1 " + roleRepository.save(roles));
+
 //            Customer c1=new Customer("Conforama","Novi Pazar","Novi Pazar","Srbija",36300,"Asija Ramovic","asija@gmail.com");
 //            Customer c2=new Customer("LCW","Sava Kovacevic 7","Beograd","Srbija",11000);
 //            log.info("Ubacujem Customer 1 " + customerRepository.save(c1));

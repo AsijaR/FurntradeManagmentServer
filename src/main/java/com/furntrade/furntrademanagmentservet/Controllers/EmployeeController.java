@@ -1,13 +1,17 @@
 package com.furntrade.furntrademanagmentservet.Controllers;
 
+import com.furntrade.furntrademanagmentservet.Dtos.AccountDto;
 import com.furntrade.furntrademanagmentservet.Exceptions.NotFoundExceptions.ObjectNotFoundException;
 import com.furntrade.furntrademanagmentservet.ModelAssemblers.EmployeeModelAssembler;
+import com.furntrade.furntrademanagmentservet.Models.AppRole;
 import com.furntrade.furntrademanagmentservet.Models.AppUser;
 import com.furntrade.furntrademanagmentservet.Repositories.AppUserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,12 +21,15 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
-@RequestMapping("/employees")
+@RequestMapping("")
 @CrossOrigin(origins = "http://localhost:3000")
 public class EmployeeController {
     
     private final AppUserRepository repository;
     private final EmployeeModelAssembler assembler;
+
+//    @Autowired
+//    private PasswordEncoder passwordEncoder;
 
     public EmployeeController(AppUserRepository repository, EmployeeModelAssembler assembler) {
         this.repository = repository;
@@ -38,13 +45,27 @@ public class EmployeeController {
         return CollectionModel.of(AppUsers, linkTo(methodOn(EmployeeController.class).All()).withSelfRel());
     }
     @PostMapping("/add")
-    ResponseEntity<?> newAppUser(@RequestBody AppUser newAppUser) {
+    ResponseEntity<?> newAppUser(@RequestBody AccountDto newAppUser) {
 
-        EntityModel<AppUser> entityModel = assembler.toModel(repository.save(newAppUser));
+        AppUser newUser=new AppUser();
+        newUser.setEmail("ovomijemail");
+        newUser.setUsername(newAppUser.getUsername());
+        //newUser.setPassword(passwordEncoder.encode(newAppUser.getPassword()));
+        newUser.setPlaceOfWork("np");
+       // newUser.setRole(AppRole.EMPLOYEE);
+        try {
+            repository.save(newUser);
+            return ResponseEntity.ok("");
+        }
+        catch (Exception e)
+        {
+            return ResponseEntity.ok("UPS NESTO JE BILO");
+        }
+       // EntityModel<AppUser> entityModel = assembler.toModel(repository.save(newUser));
 
-        return ResponseEntity //
-                .created(entityModel.getRequiredLink(IanaLinkRelations.SELF).toUri()) //
-                .body(entityModel);
+       // return ResponseEntity //
+      //          .created(entityModel.getRequiredLink(IanaLinkRelations.SELF).toUri()) //
+      //          .body(entityModel);
     }
     @GetMapping("/{id}")
     public EntityModel<AppUser> One(@PathVariable Long id)
