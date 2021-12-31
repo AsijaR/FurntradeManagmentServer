@@ -6,32 +6,29 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.furntrade.furntrademanagmentservet.ModelAssemblers.AppUserModelAssembler;
+import com.furntrade.furntrademanagmentservet.Dtos.AccountDto;
+import com.furntrade.furntrademanagmentservet.Dtos.EmployeeInfoDto;
+import com.furntrade.furntrademanagmentservet.Dtos.UserChangePasswordDto;
 import com.furntrade.furntrademanagmentservet.Models.AppRole;
 import com.furntrade.furntrademanagmentservet.Models.AppUser;
-import com.furntrade.furntrademanagmentservet.Repositories.AppUserRepository;
 import com.furntrade.furntrademanagmentservet.Service.UserService;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URI;
+import java.text.ParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.stream;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -42,14 +39,47 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 public class AppUserController {
 
     private final UserService userService;
-    @GetMapping()
-    public ResponseEntity<List<AppUser>> getUsers(){
-        return ResponseEntity.ok().body(userService.getUsers());
+
+
+    @GetMapping("/all")
+    public CollectionModel<EmployeeInfoDto> All(){
+       return CollectionModel.of(userService.getUsers(), linkTo(methodOn(AppUserController.class).All()).withSelfRel());
     }
-    @GetMapping("/save")
-    public ResponseEntity<AppUser> saveUser(@RequestBody AppUser user){
-        URI uri=URI.create(ServletUriComponentsBuilder.fromCurrentContextPath().path("/users/save").toUriString());
-        return ResponseEntity.created(uri).body(userService.saveUser(user));
+    @GetMapping("/{username}")
+    public ResponseEntity<EmployeeInfoDto> One(@PathVariable String username)
+    {
+        EmployeeInfoDto user=userService.getUser(username);
+        if (user==null)
+            return (ResponseEntity<EmployeeInfoDto>) ResponseEntity.notFound();
+        return ResponseEntity.ok().body(user);//assembler.toModel(appUser);
+    }
+    @PostMapping("/add-employee")
+    public ResponseEntity<?> saveUser(@RequestBody AccountDto newUser) throws ParseException {
+        if(userService.saveUser(newUser)!=null)
+        {
+            URI uri=URI.create(ServletUriComponentsBuilder.fromCurrentContextPath().path("/users/add-employee").toUriString());
+            return ResponseEntity.created(uri).body(userService.saveUser(newUser));
+        }
+        else return ResponseEntity.badRequest().body("Username is taken");
+    }
+    @DeleteMapping("/{username}")
+    public ResponseEntity<?> deleteUser(@PathVariable String username) {
+        userService.deleteUser(username);
+        return ResponseEntity.noContent().build();
+    }
+    @PatchMapping("/{username}/change-password")
+    public ResponseEntity<?> changePassword(@PathVariable String username,@RequestBody UserChangePasswordDto passwordDto) {
+        if(userService.changePassword(username,passwordDto))
+            return ResponseEntity.ok("Password successfully changed");
+        else
+            return ResponseEntity.badRequest().body("Password are not matching");
+    }
+    @PutMapping("/{username}/update")
+    ResponseEntity<?> UpdateUser(@PathVariable String username,@RequestBody EmployeeInfoDto userDto)
+    {
+       if(userService.updateProfile(username,userDto)!=null)
+           return ResponseEntity.ok().body(userDto);
+       else return ResponseEntity.notFound().build();
     }
     @GetMapping("/role/save")
     public ResponseEntity<AppRole> saveRole(@RequestBody AppRole role){
@@ -67,11 +97,11 @@ public class AppUserController {
                 JWTVerifier verifier= JWT.require(algorithm).build();
                 DecodedJWT decodedJWT=verifier.verify(refresh_token);
                 String username=decodedJWT.getSubject();
-                AppUser user=userService.getUser(username);
+                AppUser user=userService.getUserApp(username);
                 String access_token= JWT.create()
                         .withSubject(user.getUsername())
                         //ovo je 10mimn
-                        .withExpiresAt(new Date(System.currentTimeMillis()+10*60*1000))
+                        .withExpiresAt(new Date(System.currentTimeMillis()+120*60*1000))
                         .withIssuer(request.getRequestURI().toString())
                         .withClaim("roles",user.getRoles().stream().map(AppRole::getName).collect(Collectors.toList()))
                         .sign(algorithm);
@@ -94,15 +124,15 @@ public class AppUserController {
             throw new RuntimeException("Refresh token is missing");
         }
     }
-    @GetMapping("/role/add-role")
-    public ResponseEntity<?> addRoleToUser(@RequestBody RoleToUserForm form){
-        userService.addRoleToUser(form.getUsername(),form.getRoleName());
-        return ResponseEntity.ok().build();
-    }
+//    @GetMapping("/role/add-role")
+//    public ResponseEntity<?> addRoleToUser(@RequestBody RoleToUserForm form){
+//        userService.addRoleToUser(form.getUsername(),form.getRoleName());
+//        return ResponseEntity.ok().build();
+//    }
 }
 
-@Data
-class RoleToUserForm{
-    private String username;
-    private String roleName;
-}
+//@Data
+//class RoleToUserForm{
+//    private String username;
+//    private String roleName;
+//}

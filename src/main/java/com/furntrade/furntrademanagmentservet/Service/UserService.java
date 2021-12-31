@@ -1,11 +1,16 @@
 package com.furntrade.furntrademanagmentservet.Service;
 
+import com.furntrade.furntrademanagmentservet.Dtos.AccountDto;
+import com.furntrade.furntrademanagmentservet.Dtos.EmployeeInfoDto;
+import com.furntrade.furntrademanagmentservet.Dtos.UserChangePasswordDto;
+import com.furntrade.furntrademanagmentservet.ModelAssemblers.AppUserModelAssembler;
 import com.furntrade.furntrademanagmentservet.Models.AppRole;
 import com.furntrade.furntrademanagmentservet.Models.AppUser;
 import com.furntrade.furntrademanagmentservet.Repositories.AppRoleRepository;
 import com.furntrade.furntrademanagmentservet.Repositories.AppUserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.modelmapper.ModelMapper;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -14,15 +19,21 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
+
 @Service @RequiredArgsConstructor @Transactional @Slf4j
 public class UserService implements IUserService, UserDetailsService {
 
     private final AppUserRepository userRepository;
     private final AppRoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private ModelMapper modelMapper;
+    private final AppUserModelAssembler assembler;
+
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         AppUser user = userRepository.findByUsername(username);
@@ -39,12 +50,51 @@ public class UserService implements IUserService, UserDetailsService {
         return new org.springframework.security.core.userdetails.User(user.getUsername(),user.getPassword(),authorities);
     }
     @Override
-    public AppUser saveUser(AppUser user) {
+    public AccountDto saveUser(AccountDto newUser) throws ParseException {
         log.info("cuvam podatke");
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        return userRepository.save(user);
+        var usernameAlreadyExist=userRepository.findByUsername(newUser.getUsername());
+        if(usernameAlreadyExist== null)
+        {
+            AppRole role=roleRepository.findByName("employee");
+            newUser.setPassword(passwordEncoder.encode(newUser.getPassword()));
+            newUser.getRoles().add(role);
+            userRepository.save(assembler.convertToAppUserEntity(newUser));
+            return newUser;
+        }
+        else return null;
     }
-
+    @Override
+    public void deleteUser(String username){
+        log.info("brisem podatke");
+        AppUser user=userRepository.findByUsername(username);
+        userRepository.deleteById(user.getId());
+        log.info("obrisala sam korisnika");
+    }
+    @Override
+    public boolean changePassword(String username, UserChangePasswordDto passwordDto){
+        AppUser user=userRepository.findByUsername(username);
+        var encodedOldPass=passwordEncoder.encode(passwordDto.getOldPassword());
+        var isPasswordCorrect=passwordEncoder.matches(passwordDto.getOldPassword(),user.getPassword());
+        if(isPasswordCorrect)
+        {
+            log.info("korisnik je uneo tacnu sifru");
+            user.setPassword(passwordEncoder.encode(passwordDto.getNewPassword()));
+            userRepository.save(user);
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    @Override
+    public EmployeeInfoDto updateProfile(String username, EmployeeInfoDto userDto){
+        AppUser user=userRepository.findByUsername(username);
+        user.setFirstName(userDto.getFirstName());
+        user.setLastName(userDto.getLastName());
+        user.setPlaceOfWork(userDto.getPlaceOfWork());
+        user.setEmail(userDto.getEmail());
+        return assembler.toModel(userRepository.save(user));
+    }
     @Override
     public AppRole saveRole(AppRole role) {
         return roleRepository.save(role);
@@ -58,13 +108,29 @@ public class UserService implements IUserService, UserDetailsService {
     }
 
     @Override
-    public AppUser getUser(String username) {
+    public EmployeeInfoDto getUser(String username) {
+        return assembler.toModel(userRepository.findByUsername(username));
+    }
+    public AppUser getUserApp(String username) {
         return userRepository.findByUsername(username);
     }
-
     @Override
-    public List<AppUser> getUsers() {
-        return userRepository.findAll();
+    public List<EmployeeInfoDto> getUsers() {
+        List<EmployeeInfoDto> users=userRepository.findAll().stream().map(assembler::toModel).collect(Collectors.toList());
+        return  users;
+    }
+
+    private EmployeeInfoDto convertToDto(AppUser user) {
+        EmployeeInfoDto usersDto = modelMapper.map(user, EmployeeInfoDto.class);
+        return usersDto;
+    }
+
+    private AppUser convertToAppUserEntity(EmployeeInfoDto usersDto) throws ParseException {
+        AppUser user = modelMapper.map(usersDto, AppUser.class);
+        if (usersDto.getUsername() != null) {
+            AppUser oldUser = userRepository.findByUsername(usersDto.getUsername());
+        }
+        return user;
     }
 
 }
