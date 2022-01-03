@@ -27,6 +27,16 @@ public class FurntradeManagmentServetApplication {
         return new ModelMapper();
     }
 
+//    @Bean
+//    public WebMvcConfigurer corsConfigurer() {
+//        return new WebMvcConfigurer() {
+//            @Override
+//            public void addCorsMappings(CorsRegistry registry) {
+//                registry.addMapping("/login/**").allowedOrigins("http://localhost:3000/");
+//            }
+//        };
+//    }
+
 //    CommandLineRunner run(IUserService userService){
 //        return args -> {
 //            userService.saveRole(new AppRole(null,"admin"));

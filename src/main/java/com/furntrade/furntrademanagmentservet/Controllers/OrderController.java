@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/orders")
-@CrossOrigin(origins = "http://localhost:3000")
 public class OrderController {
     private final OrderRepository repository;
     private final OrderModelAssembler assembler;

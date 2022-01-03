@@ -19,7 +19,6 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/customers")
-@CrossOrigin(origins = "http://localhost:3000")
 public class CustomerController {
 
     private final CustomerRepository repository;
