@@ -20,7 +20,6 @@ import java.util.stream.Collectors;
 public class OrderController {
     private final OrderRepository repository;
     private final OrderModelAssembler assembler;
-
     @Autowired
     private ModelMapper modelMapper;
 
@@ -42,17 +41,19 @@ public class OrderController {
         return CollectionModel.of(orders);
     }
     @GetMapping("/search")
-    public Order SearchById(@RequestParam Long id)
+    public OrdersDto SearchById(@RequestParam Long id)
     {
         var o = repository.getOrderById(id);
-        return o;
+        return assembler.toModel(o);
     }
     @GetMapping("/filter-order-status")
-    public List<Order> FilterOrderByStatus(@RequestParam String status)
+    public CollectionModel<OrdersDto> FilterOrderByStatus(@RequestParam String status)
     {
         OrderStatus orderStatus = OrderStatus.valueOf(status.toUpperCase());
-        var o = repository.findAllByStatus(orderStatus);
-        return o;
+        List<OrdersDto> orders = repository.findAllByStatus(orderStatus).stream().
+                map(assembler::toModel)//
+                .collect(Collectors.toList());
+        return CollectionModel.of(orders);
     }
     @GetMapping("/{id}")
     public Order One(@PathVariable Long id)
@@ -113,6 +114,31 @@ public class OrderController {
            return (ResponseEntity<?>) ResponseEntity.badRequest();
        }
     }
+    @PatchMapping("{id}/product/{productId}/change-quantity/")
+    ResponseEntity<?> changeProductQuantity(@PathVariable Long id,@PathVariable Long productId,@RequestParam int quantity) throws ParseException
+    {
+        Order order=repository.findById(id).orElseThrow(()->new ObjectNotFoundException(id));
+        Product product=productRepository.findById(productId).orElseThrow(()->new ObjectNotFoundException(id));
+        var ddd=order.getOrderedProducts().stream().filter(p->p.getProduct()==product);
+        var productExistInOrder=order.getOrderedProducts().stream().anyMatch(p->p.getProduct()==product);
+        if(productExistInOrder)
+        {
+           // var c=repository.update(order,product,quantity);
+            order.addProduct(product,quantity);
+            try {
+           //     repository.save(order);
+                return ResponseEntity.accepted().body(order);
+            }
+            catch (Exception ex)
+            {
+                return ResponseEntity.ok("Product is already part of the order. Cant add duplicates!");
+            }
+        }
+        else
+        {
+            return (ResponseEntity<?>) ResponseEntity.badRequest();
+        }
+    }
     @PatchMapping("{id}/add-product/{productId}")
     ResponseEntity<?> addProductToOrder(@PathVariable Long id,@PathVariable Long productId,@RequestParam int quantity) throws ParseException
     {
@@ -125,11 +151,11 @@ public class OrderController {
             order.addProduct(product,quantity);
             try {
                 repository.save(order);
-                return ResponseEntity.ok("Product is addede to the order");
+                return ResponseEntity.accepted().body(order);
             }
            catch (Exception ex)
            {
-               return ResponseEntity.ok(ex);
+               return ResponseEntity.ok("Product is already part of the order. Cant add duplicates!");
            }
         }
         else

@@ -1,7 +1,9 @@
 package com.furntrade.furntrademanagmentservet.ModelAssemblers;
 import com.furntrade.furntrademanagmentservet.Controllers.OrderController;
 import com.furntrade.furntrademanagmentservet.Dtos.OrdersDto;
+import com.furntrade.furntrademanagmentservet.Dtos.ProductOrderDetailsDto;
 import com.furntrade.furntrademanagmentservet.Models.Order;
+import com.furntrade.furntrademanagmentservet.Models.ProductOrderDetails;
 import org.modelmapper.ModelMapper;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.Link;
@@ -38,5 +40,9 @@ public class OrderModelAssembler implements RepresentationModelAssembler<Order, 
         }
 
         return new CollectionModel<OrdersDto>(ordersDTOS);
+    }
+
+    public CollectionModel<OrdersDto> toCollectionModelDto(Iterable<? extends Order> entities) {
+        return RepresentationModelAssembler.super.toCollectionModel(entities);
     }
 }

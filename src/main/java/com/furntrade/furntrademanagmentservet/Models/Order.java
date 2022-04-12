@@ -54,13 +54,18 @@ public class Order{
     public void setOrderedProducts(List<ProductOrderDetails> orderedProducts) {
         this.orderedProducts = orderedProducts;
     }
-
+//    public void changeProductQuantity(int productId, int quantity) {
+//        ProductOrderDetails orderedProduct = new ProductOrderDetails(this,product,quantity);
+//        orderedProducts.add(orderedProduct);
+//    //    product.getProductOrderDetails().add(orderedProduct);
+//        totalOrderPrice+=product.getPrice()*quantity;
+//
+//    }
     public void addProduct(Product product, int quantity) {
         ProductOrderDetails orderedProduct = new ProductOrderDetails(this,product,quantity);
         orderedProducts.add(orderedProduct);
         product.getProductOrderDetails().add(orderedProduct);
         totalOrderPrice+=product.getPrice()*quantity;
-
     }
 
     public void removeProduct(Product product,int quantity) {
