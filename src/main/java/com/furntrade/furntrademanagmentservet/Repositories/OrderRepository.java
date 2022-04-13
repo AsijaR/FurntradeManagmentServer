@@ -1,6 +1,8 @@
 package com.furntrade.furntrademanagmentservet.Repositories;
 import com.furntrade.furntrademanagmentservet.Models.Order;
 import com.furntrade.furntrademanagmentservet.Models.OrderStatus;
+import com.furntrade.furntrademanagmentservet.Models.Product;
+import com.furntrade.furntrademanagmentservet.Models.ProductOrderDetails;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.repository.query.Param;
 
@@ -11,5 +13,4 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
   Order getOrderById(Long id);
   Order findOrderById(Long id);
   List<Order> findAllByStatus(OrderStatus s);
-
 }
